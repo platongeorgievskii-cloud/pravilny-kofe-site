@@ -1,0 +1,215 @@
+/* ============ ПРАВИЛЬНЫЙ КОФЕ — motion-слой ============ */
+
+/* пословный reveal: каждое слово в маске (padding — чтобы не срезало выносные элементы букв) */
+.word{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.14em;margin-bottom:-.14em}
+.word-i{display:inline-block}
+
+/* активный пункт меню */
+.nav nav a{transition:color .3s}
+.nav nav a.active{color:var(--cream)}
+.nav nav a.active:after{transform:scaleX(1);background:var(--accent)}
+
+/* 3D-наклон карточек команды */
+.team-grid{perspective:1000px}
+.tilt{transform-style:preserve-3d}
+
+/* магнитные элементы: JS управляет transform, CSS-transition его бы тормозил */
+.magnetic{transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease),box-shadow .35s var(--ease)}
+.magnetic:hover{transform:none}
+
+/* зернистость героя едва дышит */
+.hero-grain{animation:grain-shift 9s steps(6) infinite}
+@keyframes grain-shift{0%{background-position:0 0}25%{background-position:2px 3px}50%{background-position:-2px 1px}75%{background-position:3px -2px}100%{background-position:0 0}}
+
+/* свечение вокруг зерна при обжарке — базовое состояние (JS управляет прозрачностью) */
+.roast-glow{opacity:0}
+
+/* доступность: видимый фокус */
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+/* горизонтальный трек происхождения — плавность на композиторе */
+.origins-track{backface-visibility:hidden}
+
+/* курсор прячется до первого движения мыши (JS ставит autoAlpha) */
+.cursor{opacity:0}
+
+/* large-word полоса: лёгкий наклон для глубины */
+.bigword-inner{transform:translateZ(0)}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-grain{animation:none}
+  .cursor{display:none}
+}
+
+/* ═══════════════ НОВЫЙ MOTION-СЛОЙ ═══════════════ */
+
+/* --- хвост курсора: 5 точек, догоняют с разной задержкой --- */
+.cursor-trail{position:fixed;inset:0;z-index:9996;pointer-events:none;opacity:0}
+.cursor-trail i{position:absolute;top:0;left:0;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.5;transform:translate(-50%,-50%);will-change:transform}
+.cursor-trail i:nth-child(2){opacity:.38;width:5px;height:5px}
+.cursor-trail i:nth-child(3){opacity:.27;width:4px;height:4px}
+.cursor-trail i:nth-child(4){opacity:.17;width:4px;height:4px}
+.cursor-trail i:nth-child(5){opacity:.09;width:3px;height:3px}
+@media(hover:none){.cursor-trail{display:none}}
+
+/* --- летающая кофейная пыль по всей странице --- */
+.dust{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.55}
+
+/* --- тёплое пятно света под курсором в hero --- */
+.hero-glow{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:radial-gradient(340px 340px at var(--gx,50%) var(--gy,50%),#e0a0601f,transparent 68%)}
+.hero:hover .hero-glow{opacity:1}
+
+/* --- превью фото при наведении на строку меню --- */
+.menu-peek{position:fixed;z-index:9995;top:0;left:0;width:190px;height:190px;pointer-events:none;opacity:0;
+  border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surface);
+  box-shadow:0 26px 60px #000a;will-change:transform}
+.menu-peek img{width:100%;height:100%;object-fit:contain;padding:12px}
+.mrow{position:relative;cursor:default}
+.mrow span{transition:color .3s,transform .4s var(--ease),letter-spacing .4s var(--ease)}
+.mrow.hot span{color:var(--accent);transform:translateX(12px);letter-spacing:.02em}
+.mrow.hot i{border-bottom-color:#c8763c66}
+.mrow i{transition:border-color .4s}
+@media(hover:none),(max-width:900px){.menu-peek{display:none}}
+
+/* --- бесконечная карусель отзывов (две ленты в разные стороны) --- */
+.reviews{overflow:hidden}
+.review-marquee{margin-top:64px;display:flex;flex-direction:column;gap:18px}
+.review-track{display:flex;gap:18px;width:max-content;will-change:transform}
+.review-track .review-card{width:min(78vw,360px);flex:none}
+.review-track.rev .review-card{width:min(78vw,330px)}
+.review-track .review-card:hover{transform:translateY(-10px) rotate(-1deg)}
+.review-fade{position:relative}
+
+/* --- стопка залипающих карточек --- */
+.stack-section{padding:clamp(90px,13vh,160px) var(--pad);background:var(--bg);overflow-x:clip}
+.stack-title{margin-top:20px}
+.stack-cards{margin-top:60px;display:flex;flex-direction:column;gap:26px}
+.stack-card{position:sticky;top:calc(9vh + var(--i,0) * 18px);background:var(--sc,#2a1e14);border:1px solid var(--line);border-radius:24px;
+  padding:clamp(28px,4vw,52px);overflow:hidden;min-height:min(52vh,400px);
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;
+  box-shadow:0 -8px 40px #0006;will-change:transform}
+.stack-num{display:block;font:600 clamp(40px,7vw,86px)/1 var(--display);color:#f3e9dd14;letter-spacing:-.04em}
+.stack-card h3{font:600 clamp(22px,3vw,40px)/1.15 var(--display);letter-spacing:-.03em;margin-top:14px}
+.stack-card p{margin-top:18px;color:var(--muted);font-size:clamp(14px,1.1vw,16px);max-width:460px}
+.stack-card img{width:clamp(120px,17vw,230px);height:clamp(120px,17vw,230px);object-fit:contain;
+  filter:drop-shadow(0 24px 24px #0009);transition:transform .8s var(--ease)}
+.stack-card:hover img{transform:scale(1.1) rotate(-8deg)}
+.stack-card:before{content:'';position:absolute;left:-10%;top:-40%;width:60%;height:180%;
+  background:linear-gradient(90deg,transparent,#f3e9dd0d,transparent);transform:rotate(18deg) translateX(-160%);
+  transition:transform 1.1s var(--ease)}
+.stack-card:hover:before{transform:rotate(18deg) translateX(320%)}
+@media(max-width:860px){
+  .stack-card{grid-template-columns:1fr;min-height:auto;gap:18px;position:static;top:auto}
+  .stack-card img{width:120px;height:120px}
+  .menu-peek{display:none}
+}
+
+/* --- вращающийся badge в about --- */
+.spin-badge{position:absolute;left:50%;top:50%;width:min(52%,260px);height:min(52%,260px);
+  margin:calc(min(52%,260px) / -2) 0 0 calc(min(52%,260px) / -2);pointer-events:none}
+.spin-badge svg{width:100%;height:100%;animation:spin 26s linear infinite}
+.spin-badge text{font:500 8.4px var(--mono);letter-spacing:.24em;text-transform:uppercase;fill:var(--accent);opacity:.85}
+
+/* --- дым из ростера --- */
+.roast-smoke{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.roast-smoke i{position:absolute;left:50%;bottom:44%;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#3a2010aa,transparent 70%);opacity:0;filter:blur(5px);
+  animation:smoke 5.4s ease-in infinite}
+.roast-smoke i:nth-child(2){animation-delay:1.1s;left:44%}
+.roast-smoke i:nth-child(3){animation-delay:2.2s;left:56%}
+.roast-smoke i:nth-child(4){animation-delay:3.3s;left:48%}
+.roast-smoke i:nth-child(5){animation-delay:4.4s;left:53%}
+@keyframes smoke{
+  0%{opacity:0;transform:translateY(0) scale(.5)}
+  18%{opacity:.65}
+  100%{opacity:0;transform:translateY(-150px) scale(3.4)}
+}
+
+/* --- hero h1: перспектива для 3D-наклона за мышью --- */
+.hero-copy{perspective:1100px}
+.hero h1{transform-style:preserve-3d}
+
+/* --- контейнеры, которые наклоняются от скорости скролла (JS quickTo skewY) --- */
+.cards,.menu-lists,.event-list,.faq-list,.team-grid,.day-rail,.review-track{will-change:transform}
+
+/* --- строки меню: подчёркивание-волна при наведении на колонку --- */
+.menu-col{position:relative}
+.menu-col:hover .mrow b{color:var(--gold)}
+
+/* --- карточки origins: лёгкий подъём при скролле (JS) --- */
+.origin-card{will-change:transform}
+
+/* --- буквы bigword подкрашиваются по очереди при прокрутке (JS добавляет .lit) --- */
+.bigword-inner span{transition:none}
+
+/* --- галерея: подпись выезжает при hover --- */
+@media(hover:hover){
+  .gallery-photo figcaption{transform:translateY(160%);transition:transform .55s var(--ease)}
+  .gallery-photo:hover figcaption{transform:translateY(0)}
+}
+
+/* --- события: номер-дата крутится при наведении --- */
+.event-date b{transition:transform .6s var(--ease),color .3s;display:inline-block}
+.event-row:hover .event-date b{transform:rotate(-8deg) scale(1.12)}
+
+/* --- кнопки в контактах: пульс при появлении --- */
+.contact-info .btn{position:relative;overflow:hidden}
+.contact-info .btn:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,#ffffff3d,transparent);
+  transform:translateX(-120%)}
+.contact-info .btn:hover:after{animation:shine .9s var(--ease)}
+@keyframes shine{to{transform:translateX(120%)}}
+
+/* --- секция-разделитель: тонкая линия рисуется при скролле --- */
+.stack-section,.reviews{position:relative}
+
+/* --- drag-подсказка для горизонтальных треков --- */
+.origins-track{cursor:grab}
+.origins-track.is-dragging{cursor:grabbing}
+.origins-track.is-dragging *{pointer-events:none}
+
+/* --- nav прячется при скролле вниз --- */
+.nav{transition:padding .4s,background .4s,border-color .4s,transform .45s var(--ease)}
+.nav.is-hidden{transform:translateY(-112%)}
+
+/* --- точки хвоста курсора центрируются margin (transform留给GSAP) --- */
+.cursor-trail i{margin:-3px 0 0 -3px;transform:none}
+
+/* --- зёрна в origins мягко дышат --- */
+.origin-img img{animation:bean-bob 6.5s ease-in-out infinite}
+@keyframes bean-bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+.origin-card:hover .origin-img img{animation:none;transform:scale(1.18) rotate(-12deg)}
+.origin-card:nth-child(2) .origin-img img{animation-delay:-1.1s}
+.origin-card:nth-child(3) .origin-img img{animation-delay:-2.2s}
+.origin-card:nth-child(4) .origin-img img{animation-delay:-3.3s}
+.origin-card:nth-child(5) .origin-img img{animation-delay:-4.4s}
+.origin-card:nth-child(6) .origin-img img{animation-delay:-5.5s}
+
+/* --- фото дня парят --- */
+.day-photo{animation:photo-float 7s ease-in-out infinite}
+@keyframes photo-float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+.day-rail article:nth-child(2) .day-photo{animation-delay:-2.3s}
+.day-rail article:nth-child(3) .day-photo{animation-delay:-4.6s}
+.day-rail article:hover .day-photo{animation:none;transform:scale(1.14) rotate(-6deg)}
+
+/* --- кольцо вокруг аватара при hover --- */
+.team-card:hover .team-ava{animation:ava-ring 1.4s ease-out infinite}
+@keyframes ava-ring{0%{box-shadow:0 0 0 0 #c8763c66}100%{box-shadow:0 0 0 16px #c8763c00}}
+
+/* --- стрелки на кнопках героя подпрыгивают --- */
+.hero-actions .btn .arr{animation:arr-bob 1.8s ease-in-out infinite}
+.hero-actions .btn:nth-child(2) .arr{animation-delay:-.9s}
+@keyframes arr-bob{0%,100%{transform:translate(0,0)}50%{transform:translate(0,4px)}}
+.hero-actions .btn:hover .arr{animation:none;transform:translate(3px,3px)}
+
+/* --- bigword: буквы подсвечиваются при скролле (JS красит color) --- */
+.bigword-inner b{font-weight:inherit}
+
+@media(prefers-reduced-motion:reduce){
+  .cursor-trail,.dust,.hero-glow,.menu-peek,.roast-smoke{display:none}
+  .spin-badge svg{animation:none}
+  .review-track{width:auto;flex-wrap:wrap}
+  .review-track .review-card{width:100%}
+  .stack-card{position:static}
+  .gallery-photo figcaption{transform:none}
+}
