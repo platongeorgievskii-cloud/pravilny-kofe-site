@@ -293,7 +293,7 @@ if(!reduce&&!isTouch){
       x(e.clientX);y(e.clientY);
     },{passive:true});
     document.addEventListener('mouseover',e=>{
-      cursor.classList.toggle('is-link',!!e.target.closest('a,button,.card,.team-card,.review-card,.faq-q'));
+      cursor.classList.toggle('is-link',!!e.target.closest('a,button,.card,.team-card,.review-card,.event-card,.faq-q'));
     });
   }
 }
@@ -551,32 +551,65 @@ if(!reduce&&!isTouch&&innerWidth>900){
   const peek=$('#menuPeek'),peekImg=peek?peek.querySelector('img'):null;
   if(peek&&peekImg){
     gsap.set(peek,{xPercent:-50,yPercent:-50,scale:.7,rotate:-6,autoAlpha:0});
-    const px=gsap.quickTo(peek,'x',{duration:.45,ease:'power3'});
-    const py=gsap.quickTo(peek,'y',{duration:.45,ease:'power3'});
-    let current='';
+    const px=gsap.quickTo(peek,'x',{duration:.28,ease:'power3'});
+    const py=gsap.quickTo(peek,'y',{duration:.28,ease:'power3'});
+    let current='',lastX=-1,lastY=-1,activeRow=null,queued=false;
+    const HALF=95; // половина ширины/высоты превью (190px)
+
+    // цель по X: справа от курсора с зазором; если справа не влезает — слева
+    const targetX=mx=>{
+      const right=mx+28+HALF;
+      return right<=innerWidth-12 ? right : Math.max(mx-28-HALF,HALF+12);
+    };
+    const targetY=my=>Math.min(Math.max(my,HALF+12),innerHeight-HALF-12);
+
+    const show=row=>{
+      if(activeRow&&activeRow!==row)activeRow.classList.remove('hot');
+      activeRow=row;
+      row.classList.add('hot');
+      const col=row.closest('.menu-col');
+      const h4=col?col.querySelector('h4').textContent.trim():'';
+      let src;
+      if(/кофе/i.test(h4))src='assets/web/beans-scatter-01.webp';
+      else if(/выпеч/i.test(h4))src='assets/web/croissant-top.webp';
+      else if(/десерт/i.test(h4))src='assets/web/berry-tart.webp';
+      else src='assets/web/coffee-bag-hero.webp';
+      if(src!==current){current=src;peekImg.src=src}
+      // ставим рядом с курсором сразу, без перелёта с прошлой позиции
+      if(lastX>=0){gsap.set(peek,{x:targetX(lastX),y:targetY(lastY)})}
+      gsap.to(peek,{scale:1,rotate:4,autoAlpha:1,duration:.45,ease:'expo.out',overwrite:'auto'});
+    };
+    const hide=()=>{
+      if(activeRow){activeRow.classList.remove('hot');activeRow=null}
+      gsap.to(peek,{scale:.7,rotate:-6,autoAlpha:0,duration:.3,ease:'power2.in',overwrite:'auto'});
+    };
+
     $$('.mrow').forEach(row=>{
-      row.addEventListener('mouseenter',()=>{
-        row.classList.add('hot');
-        // картинка по разделу колонки
-        const col=row.closest('.menu-col');
-        const h4=col?col.querySelector('h4').textContent.trim():'';
-        let src=null;
-        if(/кофе/i.test(h4))src='assets/web/beans-scatter-01.webp';
-        else if(/выпеч/i.test(h4))src='assets/web/croissant-top.webp';
-        else if(/десерт/i.test(h4))src='assets/web/berry-tart.webp';
-        else src='assets/web/coffee-bag-hero.webp';
-        if(src!==current){current=src;peekImg.src=src}
-        gsap.to(peek,{scale:1,rotate:4,autoAlpha:1,duration:.45,ease:'expo.out'});
-      });
-      row.addEventListener('mouseleave',()=>{
-        row.classList.remove('hot');
-        gsap.to(peek,{scale:.7,rotate:-6,autoAlpha:0,duration:.35,ease:'power2.in'});
-      });
+      row.addEventListener('mouseenter',()=>show(row));
+      row.addEventListener('mouseleave',hide);
     });
     addEventListener('mousemove',e=>{
-      px(Math.min(e.clientX+150,innerWidth-115));
-      py(Math.min(Math.max(e.clientY,115),innerHeight-115));
+      lastX=e.clientX;lastY=e.clientY;
+      px(targetX(e.clientX));
+      py(targetY(e.clientY));
     },{passive:true});
+
+    // При скролле колесом курсор стоит на месте: строка уезжает из-под него,
+    // а mouseleave может не прийти (плюс skew-трансформ контейнера меняет
+    // hit-test). Проверяем сами, что реально под курсором, и прячем превью.
+    const recheck=()=>{
+      queued=false;
+      if(lastX<0)return;
+      const under=document.elementFromPoint(lastX,lastY);
+      if(!under||!under.closest('.mrow'))hide();
+    };
+    addEventListener('scroll',()=>{
+      if(!activeRow||queued)return;
+      queued=true;requestAnimationFrame(recheck);
+    },{passive:true});
+    const lists=$('.menu-lists');
+    if(lists)lists.addEventListener('mouseleave',hide);
+    addEventListener('resize',hide);
   }
 }
 
@@ -584,7 +617,7 @@ if(!reduce&&!isTouch&&innerWidth>900){
    Наклоняем контейнеры (не карточки) через quickTo — hover-трансформы
    дочерних карточек остаются живы. */
 if(!reduce&&lenis){
-  const skewBoxes=$$('.cards,.menu-lists,.event-list,.faq-list,.team-grid,.day-rail');
+  const skewBoxes=$$('.cards,.menu-lists,.event-grid,.faq-list,.team-grid,.day-rail');
   const setSkew=skewBoxes.map(el=>gsap.quickTo(el,'skewY',{duration:.6,ease:'power3.out'}));
   let last=0;
   lenis.on('scroll',e=>{
@@ -623,14 +656,16 @@ if(!reduce){
   });
 }
 
-/* ---------- 7. стопка карточек: масштаб + затемнение предыдущей ---------- */
+/* ---------- 7. стопка карточек: предыдущая чуть уходит вглубь ----------
+   Намеренно БЕЗ затемнения: следующая карта всё равно накрывает предыдущую,
+   а видимая сверху кромка не должна «гаснуть» — это читалось как баг. */
 if(!reduce&&innerWidth>860){
   const cards=$$('.stack-card');
   cards.forEach((c,i)=>c.style.setProperty('--i',i));
   cards.forEach((c,i)=>{
     if(i===cards.length-1)return;
-    gsap.to(c,{scale:.94,filter:'brightness(.62)',ease:'none',
-      scrollTrigger:{trigger:cards[i+1],start:'top bottom',end:'top 14%',scrub:.4}});
+    gsap.to(c,{scale:.96,ease:'none',
+      scrollTrigger:{trigger:cards[i+1],start:'top bottom',end:'top 20%',scrub:.4}});
   });
   gsap.from(cards,{y:90,autoAlpha:0,duration:.9,stagger:.12,ease:'power3.out',
     scrollTrigger:{trigger:'.stack-cards',start:'top 82%',once:true}});

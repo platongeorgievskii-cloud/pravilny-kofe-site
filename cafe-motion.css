@@ -106,10 +106,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 }
 
 /* --- вращающийся badge в about --- */
-.spin-badge{position:absolute;left:50%;top:50%;width:min(52%,260px);height:min(52%,260px);
-  margin:calc(min(52%,260px) / -2) 0 0 calc(min(52%,260px) / -2);pointer-events:none}
+/* вращающийся текст по ВНЕШНЕМУ краю круга — не перекрывает картинку */
+.spin-badge{position:absolute;left:50%;top:50%;width:min(96%,470px);height:min(96%,470px);
+  margin:calc(min(96%,470px) / -2) 0 0 calc(min(96%,470px) / -2);pointer-events:none}
 .spin-badge svg{width:100%;height:100%;animation:spin 26s linear infinite}
-.spin-badge text{font:500 8.4px var(--mono);letter-spacing:.24em;text-transform:uppercase;fill:var(--accent);opacity:.85}
+.spin-badge text{font:600 3.4px var(--mono);letter-spacing:.7em;text-transform:uppercase;fill:var(--gold);opacity:.95}
 
 /* --- дым из ростера --- */
 .roast-smoke{position:absolute;inset:0;pointer-events:none;overflow:visible}
@@ -131,7 +132,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .hero h1{transform-style:preserve-3d}
 
 /* --- контейнеры, которые наклоняются от скорости скролла (JS quickTo skewY) --- */
-.cards,.menu-lists,.event-list,.faq-list,.team-grid,.day-rail,.review-track{will-change:transform}
+.cards,.menu-lists,.event-grid,.faq-list,.team-grid,.day-rail,.review-track{will-change:transform}
 
 /* --- строки меню: подчёркивание-волна при наведении на колонку --- */
 .menu-col{position:relative}
@@ -149,9 +150,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
   .gallery-photo:hover figcaption{transform:translateY(0)}
 }
 
-/* --- события: номер-дата крутится при наведении --- */
-.event-date b{transition:transform .6s var(--ease),color .3s;display:inline-block}
-.event-row:hover .event-date b{transform:rotate(-8deg) scale(1.12)}
+/* --- события: ценник-тэг подскакивает при наведении, 3D для tilt --- */
+.event-grid{perspective:1000px}
+.event-tag{transition:transform .5s var(--ease),background .3s;display:inline-block}
+.event-card:hover .event-tag{transform:rotate(-6deg) scale(1.08)}
 
 /* --- кнопки в контактах: пульс при появлении --- */
 .contact-info .btn{position:relative;overflow:hidden}
