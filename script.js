@@ -293,7 +293,7 @@ if(!reduce&&!isTouch){
       x(e.clientX);y(e.clientY);
     },{passive:true});
     document.addEventListener('mouseover',e=>{
-      cursor.classList.toggle('is-link',!!e.target.closest('a,button,.card,.team-card,.review-card,.event-card,.faq-q'));
+      cursor.classList.toggle('is-link',!!e.target.closest('a,button,.board,.team-card,.review-card,.event-card,.faq-q'));
     });
   }
 }
@@ -546,7 +546,7 @@ if(!reduce&&!isTouch){
   }
 }
 
-/* ---------- 4. превью фото при наведении на строки меню ---------- */
+/* ---------- 4. превью доски при наведении на категорию меню ---------- */
 if(!reduce&&!isTouch&&innerWidth>900){
   const peek=$('#menuPeek'),peekImg=peek?peek.querySelector('img'):null;
   if(peek&&peekImg){
@@ -563,17 +563,23 @@ if(!reduce&&!isTouch&&innerWidth>900){
     };
     const targetY=my=>Math.min(Math.max(my,HALF+12),innerHeight-HALF-12);
 
+    // какой доске соответствует категория меню
+    const boardFor=h=>{
+      if(/раф|латте со взбит|не кофе|дополни/i.test(h))return 'assets/web/menu-board-coffee-tea.webp';
+      if(/авторск|чай/i.test(h))return 'assets/web/menu-board-coffee-tea.webp';
+      if(/холодн/i.test(h))return 'assets/web/menu-board-cold.webp';
+      if(/сезон/i.test(h))return 'assets/web/menu-board-seasonal.webp';
+      if(/макарон/i.test(h))return 'assets/web/macarons-1.webp';
+      return 'assets/web/menu-board-coffee-tea.webp';
+    };
+
     const show=row=>{
       if(activeRow&&activeRow!==row)activeRow.classList.remove('hot');
       activeRow=row;
       row.classList.add('hot');
-      const col=row.closest('.menu-col');
+      const col=row.closest('.nav-cat');
       const h4=col?col.querySelector('h4').textContent.trim():'';
-      let src;
-      if(/кофе/i.test(h4))src='assets/web/beans-scatter-01.webp';
-      else if(/выпеч/i.test(h4))src='assets/web/croissant-top.webp';
-      else if(/десерт/i.test(h4))src='assets/web/berry-tart.webp';
-      else src='assets/web/coffee-bag-hero.webp';
+      const src=boardFor(h4);
       if(src!==current){current=src;peekImg.src=src}
       // ставим рядом с курсором сразу, без перелёта с прошлой позиции
       if(lastX>=0){gsap.set(peek,{x:targetX(lastX),y:targetY(lastY)})}
@@ -584,7 +590,7 @@ if(!reduce&&!isTouch&&innerWidth>900){
       gsap.to(peek,{scale:.7,rotate:-6,autoAlpha:0,duration:.3,ease:'power2.in',overwrite:'auto'});
     };
 
-    $$('.mrow').forEach(row=>{
+    $$('.nav-cat').forEach(row=>{
       row.addEventListener('mouseenter',()=>show(row));
       row.addEventListener('mouseleave',hide);
     });
@@ -594,20 +600,20 @@ if(!reduce&&!isTouch&&innerWidth>900){
       py(targetY(e.clientY));
     },{passive:true});
 
-    // При скролле колесом курсор стоит на месте: строка уезжает из-под него,
+    // При скролле колесом курсор стоит на месте: блок уезжает из-под него,
     // а mouseleave может не прийти (плюс skew-трансформ контейнера меняет
     // hit-test). Проверяем сами, что реально под курсором, и прячем превью.
     const recheck=()=>{
       queued=false;
       if(lastX<0)return;
       const under=document.elementFromPoint(lastX,lastY);
-      if(!under||!under.closest('.mrow'))hide();
+      if(!under||!under.closest('.nav-cat'))hide();
     };
     addEventListener('scroll',()=>{
       if(!activeRow||queued)return;
       queued=true;requestAnimationFrame(recheck);
     },{passive:true});
-    const lists=$('.menu-lists');
+    const lists=$('.menu-nav');
     if(lists)lists.addEventListener('mouseleave',hide);
     addEventListener('resize',hide);
   }
@@ -617,7 +623,7 @@ if(!reduce&&!isTouch&&innerWidth>900){
    Наклоняем контейнеры (не карточки) через quickTo — hover-трансформы
    дочерних карточек остаются живы. */
 if(!reduce&&lenis){
-  const skewBoxes=$$('.cards,.menu-lists,.event-grid,.faq-list,.team-grid,.day-rail');
+  const skewBoxes=$$('.boards,.menu-nav,.event-grid,.faq-list,.team-grid,.day-rail');
   const setSkew=skewBoxes.map(el=>gsap.quickTo(el,'skewY',{duration:.6,ease:'power3.out'}));
   let last=0;
   lenis.on('scroll',e=>{
@@ -738,22 +744,6 @@ if(!reduce&&!isTouch){
   });
 }
 
-/* ---------- 11. scramble-эффект для цены/температуры при появлении ---------- */
-if(!reduce){
-  $$('.card>b').forEach(b=>{
-    const final=b.textContent;
-    const chars='0123456789₽от ';
-    ScrollTrigger.create({trigger:b,start:'top 92%',once:true,onEnter:()=>{
-      let it=0;
-      const iv=setInterval(()=>{
-        b.textContent=final.split('').map((c,i)=>i<it?c:chars[Math.floor(Math.random()*chars.length)]).join('');
-        it+=.5;
-        if(it>=final.length){clearInterval(iv);b.textContent=final}
-      },28);
-    }});
-  });
-}
-
 /* ---------- 12. hero-заголовок: мягкий 3D-наклон за мышью ---------- */
 if(!reduce&&!isTouch){
   const h1=$('.hero h1');
@@ -765,6 +755,31 @@ if(!reduce&&!isTouch){
       ry(((e.clientX/innerWidth)-.5)*7);
       rx(-((e.clientY/innerHeight)-.5)*5);
     },{passive:true});
+  }
+}
+
+/* ---------- 13. лайтбокс досок меню ---------- */
+{
+  const lb=$('#lightbox'),lbImg=$('#lbImg'),lbCap=$('#lbCap'),lbClose=$('#lbClose');
+  if(lb&&lbImg){
+    const open=src=>{
+      lbImg.src=src.dataset.full;
+      lbImg.alt=src.querySelector('img')?.alt||'Меню';
+      lbCap.textContent=src.dataset.cap||'';
+      lb.hidden=false;
+      requestAnimationFrame(()=>lb.classList.add('is-open'));
+      document.body.classList.add('lb-open');
+      lbClose.focus({preventScroll:true});
+    };
+    const close=()=>{
+      lb.classList.remove('is-open');
+      document.body.classList.remove('lb-open');
+      setTimeout(()=>{lb.hidden=true;lbImg.src=''},420);
+    };
+    $$('.board').forEach(b=>b.addEventListener('click',()=>open(b)));
+    lbClose.addEventListener('click',close);
+    lb.addEventListener('click',e=>{if(e.target===lb)close()});
+    addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden)close()});
   }
 }
 

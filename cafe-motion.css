@@ -65,11 +65,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
   border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surface);
   box-shadow:0 26px 60px #000a;will-change:transform}
 .menu-peek img{width:100%;height:100%;object-fit:contain;padding:12px}
-.mrow{position:relative;cursor:default}
-.mrow span{transition:color .3s,transform .4s var(--ease),letter-spacing .4s var(--ease)}
-.mrow.hot span{color:var(--accent);transform:translateX(12px);letter-spacing:.02em}
-.mrow.hot i{border-bottom-color:#c8763c66}
-.mrow i{transition:border-color .4s}
+.nav-cat{position:relative;cursor:default}
+.nav-cat h4{transition:color .3s}
+.nav-cat.hot h4{color:var(--accent)}
 @media(hover:none),(max-width:900px){.menu-peek{display:none}}
 
 /* --- бесконечная карусель отзывов (две ленты в разные стороны) --- */
@@ -132,11 +130,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .hero h1{transform-style:preserve-3d}
 
 /* --- контейнеры, которые наклоняются от скорости скролла (JS quickTo skewY) --- */
-.cards,.menu-lists,.event-grid,.faq-list,.team-grid,.day-rail,.review-track{will-change:transform}
-
-/* --- строки меню: подчёркивание-волна при наведении на колонку --- */
-.menu-col{position:relative}
-.menu-col:hover .mrow b{color:var(--gold)}
+.boards,.menu-nav,.event-grid,.faq-list,.team-grid,.day-rail,.review-track{will-change:transform}
 
 /* --- карточки origins: лёгкий подъём при скролле (JS) --- */
 .origin-card{will-change:transform}
